@@ -112,7 +112,7 @@ public class MySQL {
     	return rowCount;
     }
     
-	public Object get(String whatAreWeLookingFor, String fromTable, String where, String whereValue) {
+	public Object get(String whatAreWeLookingFor, String fromTable, String where, Object whereValue) {
 		Object obj = null;
 		try{
 			ResultSet rs = getResult("SELECT " + whatAreWeLookingFor + " FROM " + fromTable + " WHERE " + where + "='" + whereValue + "';");

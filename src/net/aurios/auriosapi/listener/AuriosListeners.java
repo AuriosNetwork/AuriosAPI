@@ -1,5 +1,9 @@
 package net.aurios.auriosapi.listener;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -20,7 +24,6 @@ public class AuriosListeners implements Listener {
 	public void onJoin(PlayerJoinEvent e) {
 		Player p = e.getPlayer();
 		String group = core.getGroupsAPI().getTheMostValuablePlayerGroup(core.getGroupsAPI().getPlayerGroups(p.getUniqueId().toString()));
-		p.sendMessage(group + "!");
 		String prefix = ChatColor.translateAlternateColorCodes('&', core.getGroupsAPI().getPrefix(group));
 		p.setDisplayName(prefix + " §7§o" + p.getName());
 	}
@@ -28,7 +31,26 @@ public class AuriosListeners implements Listener {
 	@EventHandler
 	public void onChat(AsyncPlayerChatEvent e) {
 		Player p = e.getPlayer();
-		e.setFormat(p.getDisplayName() + "§f§o: " + e.getMessage());
+		int lastPunishment = (int) core.getMySQL().get("LastPunishment", "playerdata", "Username", p.getName());
+		if(lastPunishment != 0) {
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			String sd = (String) core.getMySQL().get("ExpirationDate", "punishmentdata", "ID", lastPunishment);
+			Date d = null;
+			try {
+				d = sdf.parse(sd);
+			} catch (ParseException e1) {
+				e1.printStackTrace();
+			}
+			if(d != null) {
+				Date now = new Date();
+				if(now.before(d)) {
+					e.setCancelled(true);
+				}else e.setCancelled(false);
+			}else e.setCancelled(false);
+		}else e.setCancelled(false);
+		
+		if(!e.isCancelled()) e.setFormat(p.getDisplayName() + "§f§o: " + e.getMessage());
+		else p.sendMessage(core.getPrefix() + "§cYou can not talk right now, because you are muted.");
 	}
 
 }
